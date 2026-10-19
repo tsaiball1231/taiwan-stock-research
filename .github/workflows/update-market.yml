@@ -1,0 +1,35 @@
+name: Update Taiwan stock market data
+on:
+  # 23:10 UTC = 07:10 Taiwan time (UTC+8), Tuesday through Saturday Taiwan time.
+  # Run next morning because daily all-stock data may not finalize right after close.
+  schedule:
+    - cron: '10 23 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: update-tw-stock-data
+  cancel-in-progress: false
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch and validate TWSE daily data
+        run: python scripts/update_market.py
+      - name: Commit updated data if changed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/latest.json data/history.json
+          if git diff --cached --quiet; then
+            echo 'No data changes; nothing to commit.'
+          else
+            git commit -m 'Update Taiwan stock data'
+            git push
+          fi

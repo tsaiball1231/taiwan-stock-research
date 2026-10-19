@@ -1,0 +1,11 @@
+{
+  "meta": {
+    "market_date": null,
+    "updated_at_taipei": null,
+    "source_name": "臺灣證券交易所 OpenAPI",
+    "source_url": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+    "row_count": 0,
+    "note": "尚未成功取得資料；請先在 GitHub Actions 手動執行工作流程。"
+  },
+  "stocks": []
+}
