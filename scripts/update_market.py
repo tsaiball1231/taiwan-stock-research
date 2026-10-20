@@ -55,27 +55,29 @@ def main():
         if d.get('date')
     }
 
-    by_date[market_date] = {
-        'date': market_date,
-        'stock_count': len(stocks),
-        'advancers': sum(
-            s['change'] is not None and s['change'] > 0
-            for s in stocks
-        ),
-        'decliners': sum(
-            s['change'] is not None and s['change'] < 0
-            for s in stocks
-        ),
-        'stocks': {
-            s['code']: {
-                'name': s['name'],
-                'close': s['close'],
-                'change': s['change'],
-                'volume': s['volume']
-            }
-            for s in stocks
+  
+by_date[market_date] = {
+    'date': market_date,
+    'stock_count': len(stocks),
+    'advancers': sum(
+        s['change'] is not None and s['change'] > 0
+        for s in stocks
+    ),
+    'decliners': sum(
+        s['change'] is not None and s['change'] < 0
+        for s in stocks
+    ),
+    'stocks': {
+        s['code']: {
+            'name': s['name'],
+            'close': s['close'],
+            'change': s['change'],
+            'volume': s['volume']
         }
+        for s in stocks
     }
+}
+
 
     history['days'] = [
         by_date[d] for d in sorted(by_date)
