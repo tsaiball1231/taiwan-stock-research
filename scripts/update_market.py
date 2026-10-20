@@ -47,10 +47,46 @@ def main():
     updated=datetime.now(TAIPEI).isoformat(timespec='seconds')
     latest={'meta':{'market_date':market_date,'updated_at_taipei':updated,'source_name':'臺灣證券交易所 OpenAPI','source_url':URL,'row_count':len(stocks),'note':'交易日依 API 回傳日期判斷；休市或來源延遲時，資料日期可能不是今天。'},'stocks':sorted(stocks,key=lambda x:x['code'])}
     LATEST.write_text(json.dumps(latest,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
-    history=read_json(HISTORY,{'source':URL,'days':[]}); by_date={d.get('date'):d for d in history.get('days',[]) if d.get('date')}
-    by_date[market_date]={'date':market_date,'stock_count':len(stocks),'advancers':sum(s['change'] is not None and s['change']>0 for s in stocks),'decliners':sum(s['change'] is not None and s['change']<0 for s in stocks),'watchlist':{s['code']:{'name':s['name'],'close':s['close'],'change':s['change'],'volume':s['volume']} for s in stocks if s['code'] in WATCHLIST}}
-    history['days']=[by_date[d] for d in sorted(by_date)];history['last_updated_taipei']=updated
-    HISTORY.write_text(json.dumps(history,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
+   
+    history = read_json(HISTORY, {'source': URL, 'days': []})
+    by_date = {
+        d.get('date'): d
+        for d in history.get('days', [])
+        if d.get('date')
+    }
+
+    by_date[market_date] = {
+        'date': market_date,
+        'stock_count': len(stocks),
+        'advancers': sum(
+            s['change'] is not None and s['change'] > 0
+            for s in stocks
+        ),
+        'decliners': sum(
+            s['change'] is not None and s['change'] < 0
+            for s in stocks
+        ),
+        'stocks': {
+            s['code']: {
+                'name': s['name'],
+                'close': s['close'],
+                'change': s['change'],
+                'volume': s['volume']
+            }
+            for s in stocks
+        }
+    }
+
+    history['days'] = [
+        by_date[d] for d in sorted(by_date)
+    ][-60:]
+    history['last_updated_taipei'] = updated
+
+    HISTORY.write_text(
+        json.dumps(history, ensure_ascii=False, separators=(',', ':')) + '\n',
+        encoding='utf-8'
+    )
+
     print(f'Saved {len(stocks)} stock rows for {market_date}; updated {updated}.')
 if __name__=='__main__':
     try:main()
