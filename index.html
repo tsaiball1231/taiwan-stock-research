@@ -45,6 +45,13 @@
     </div>
   </div>
   <p class="plain">以上為目前網站取得的行情資料，不代表即時報價或投資建議。</p>
+      <div style="margin-top:24px">
+    <h3>歷史收盤價</h3>
+    <p class="plain">依網站已保存的交易日資料繪製，不代表未來價格走勢。</p>
+    <div id="historyChart" style="width:100%;min-height:100px;overflow-x:auto">
+      <p class="plain">選擇股票後顯示歷史資料。</p>
+    </div>
+  </div>
 </div>
 <div class="two-col"><section><div class="section-head"><div><h2>這些數字怎麼看？</h2><div class="sub">把事實與推論分開</div></div></div><div class="card"><span class="tag">資料事實</span><p>例如：「某股票今日收盤價為 100 元，漲跌價差為 +2 元。」這是對來源資料的描述。</p><span class="tag">可能解讀</span><p>例如：「今天收盤價上漲，代表收盤價比前一交易日高。」這只描述價格變化，不代表公司基本面一定變好。</p><span class="tag">仍不確定</span><p>單日上漲不能單獨證明某則新聞造成上漲，也不能確定明天會漲或跌。</p></div></section><section id="learn"><div class="section-head"><div><h2>白話小教室</h2><div class="sub">常見名詞速讀</div></div></div><div class="card"><strong>收盤價</strong><p class="plain">當天交易結束時的收盤價格。</p><strong>漲跌價差</strong><p class="plain">與前一交易日收盤價相比，價格增加或減少多少元；不是百分比。</p><strong>成交股數</strong><p class="plain">當日成交的股票股數，不等於成交金額，也不等於買進的人數。</p><strong>上市與上櫃</strong><p class="plain">是不同的交易市場。本版本目前只抓取上市股票，不能代表完整的上市櫃市場。</p></div></section></div>
 <section id="method"><div class="section-head"><div><h2>資料來源、更新方式與限制</h2><div class="sub">讓讀者知道數字從哪裡來</div></div></div><div class="card"><ul class="list"><li><strong>來源：</strong><a class="source" href="https://openapi.twse.com.tw/" target="_blank" rel="noopener">臺灣證券交易所 OpenAPI</a> 的上市股票日行情端點。</li><li><strong>更新：</strong>GitHub Actions 在雲端排程抓取資料並提交網站資料檔。排程可能延遲，不保證精準在某分鐘更新。</li><li><strong>資料日期：</strong>依 API 回傳日期判斷；遇到週末、休市或來源尚未更新時，資料日期可能不是當天。</li><li><strong>歷史紀錄：</strong>從啟用自動更新後逐日累積，不會自動補齊上線前所有歷史資料。</li><li><strong>目前範圍：</strong>上市股票日行情；暫不包含上櫃行情、加權指數歷史圖、股利調整、財報分析或即時報價。</li></ul><p class="plain">若資料載入失敗，請稍後重試並查看 GitHub Actions 執行紀錄。不要把缺漏資料當成零，也不要把舊資料當成最新行情。</p></div></section><div class="footer">白話台股研究站 · 學習用途 · 不構成投資建議。資料來源與使用方式應遵守官方最新條款。</div></main>
