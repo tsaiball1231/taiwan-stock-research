@@ -59,14 +59,159 @@
 let allStocks = [];
 let historyDays = [];
 
-const $ = id => document.getElementById(id);;function fmt(n,d=2){if(n===null||n===undefined||!Number.isFinite(Number(n)))return '—';return Number(n).toLocaleString('zh-TW',{maximumFractionDigits:d})}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function render(){const q=$('search').value.trim().toLowerCase(),sort=$('sort').value;let rows=allStocks.filter(s=>!q||String(s.code).toLowerCase().includes(q)||String(s.name).toLowerCase().includes(q));rows.sort((a,b)=>sort==='changeDown'?(b.change??-Infinity)-(a.change??-Infinity):sort==='changeUp'?(a.change??Infinity)-(b.change??Infinity):sort==='code'?String(a.code).localeCompare(String(b.code)):(b.volume??-Infinity)-(a.volume??-Infinity));$('stockRows').innerHTML=rows.length?rows.slice(0,100).map(s=>{const c=s.change,cls=c>0?'up':c<0?'down':'';return `<tr><td><button type="button" class="stock-pick" data-code="${esc(s.code)}">${esc(s.code)}</button></td><td><button type="button" class="stock-pick" data-code="${esc(s.code)}">${esc(s.name)}</button></td><td>${fmt(s.close)}</td><td class="${cls}">${c===null?'—':(c>0?'+':'')+fmt(c)}</td><td>${fmt(s.volume,0)}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">找不到符合的股票。</td></tr>';$('tableNote').textContent=`符合 ${rows.length.toLocaleString('zh-TW')} 檔；最多顯示前 100 檔。成交股數單位是「股」，不是「張」。`}async function init(){tryconst hr = await fetch('./data/history.json', {cache:'no-store'});
-if (hr.ok) {
-  const hd = await hr.json();
-  historyDays = Array.isArray(hd.days) ? hd.days : [];
-}{const r=await fetch('./data/latest.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();allStocks=Array.isArray(d.stocks)?d.stocks:[];const m=d.meta||{};$('dateMetric').textContent=m.market_date||'尚未更新';$('countMetric').textContent=fmt(allStocks.length,0);$('breadthMetric').textContent=`${fmt(allStocks.filter(s=>s.change!==null&&s.change>0).length,0)} / ${fmt(allStocks.filter(s=>s.change!==null&&s.change<0).length,0)}`;const updated=m.updated_at_taipei;
-$('updatedMetric').textContent=updated
-  ? updated.replace('T',' ').slice(0,16).replace(/-/g,'/')
-  : '—';$('status').textContent=allStocks.length?'資料已載入':'尚無資料';render()}catch(e){$('status').textContent='讀取失敗';$('stockRows').innerHTML='<tr><td colspan="5" class="empty">無法讀取資料。請先在 GitHub Actions 手動執行一次更新工作流程。</td></tr>';$('tableNote').textContent='錯誤：'+e.message}}$('search').addEventListener('input',render);$('sort').addEventListener('change',render);$('reset').addEventListener('click',()=>{$('search').value='';render()});
+const $ = id => document.getElementById(id);function fmt(n,d=2){if(n===null||n===undefined||!Number.isFinite(Number(n)))return '—';return Number(n).toLocaleString('zh-TW',{maximumFractionDigits:d})}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function render(){const q=$('search').value.trim().toLowerCase(),sort=$('sort').value;let rows=allStocks.filter(s=>!q||String(s.code).toLowerCase().includes(q)||String(s.name).toLowerCase().includes(q));rows.sort((a,b)=>sort==='changeDown'?(b.change??-Infinity)-(a.change??-Infinity):sort==='changeUp'?(a.change??Infinity)-(b.change??Infinity):sort==='code'?String(a.code).localeCompare(String(b.code)):(b.volume??-Infinity)-(a.volume??-Infinity));$('stockRows').innerHTML=rows.length?rows.slice(0,100).map(s=>{const c=s.change,cls=c>0?'up':c<0?'down':'';return `<tr><td><button type="button" class="stock-pick" data-code="${esc(s.code)}">${esc(s.code)}</button></td><td><button type="button" class="stock-pick" data-code="${esc(s.code)}">${esc(s.name)}</button></td><td>${fmt(s.close)}</td><td class="${cls}">${c===null?'—':(c>0?'+':'')+fmt(c)}</td><td>${fmt(s.volume,0)}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">找不到符合的股票。</td></tr>';$('tableNote').textContent=`符合 ${rows.length.toLocaleString('zh-TW')} 檔；最多顯示前 100 檔。成交股數單位是「股」，不是「張」。`}
+
+async function init() {
+  try {
+    // 先讀取歷史行情
+    const hr = await fetch('./data/history.json', {
+      cache: 'no-store'
+    });
+
+    if (hr.ok) {
+      const hd = await hr.json();
+      historyDays = Array.isArray(hd.days) ? hd.days : [];
+    }
+
+    // 再讀取最新行情
+    const r = await fetch('./data/latest.json', {
+      cache: 'no-store'
+    });
+
+    if (!r.ok) {
+      throw Error('HTTP ' + r.status);
+    }
+
+    const d = await r.json();
+    allStocks = Array.isArray(d.stocks) ? d.stocks : [];
+
+    const m = d.meta || {};
+
+    $('dateMetric').textContent =
+      m.market_date || '尚未更新';
+
+    $('countMetric').textContent =
+      fmt(allStocks.length, 0);
+
+    $('breadthMetric').textContent =
+      `${fmt(allStocks.filter(s => s.change !== null && s.change > 0).length, 0)} / ${fmt(allStocks.filter(s => s.change !== null && s.change < 0).length, 0)}`;
+
+    const updated = m.updated_at_taipei;
+
+    $('updatedMetric').textContent = updated
+      ? updated.replace('T', ' ').slice(0, 16).replace(/-/g, '/')
+      : '—';
+
+    $('status').textContent =
+      allStocks.length ? '資料已載入' : '尚無資料';
+
+    render();
+
+  } catch (e) {
+    $('status').textContent = '讀取失敗';
+
+    $('stockRows').innerHTML =
+      '<tr><td colspan="5" class="empty">無法讀取資料。請先在 GitHub Actions 手動執行一次更新工作流程。</td></tr>';
+
+    $('tableNote').textContent = '錯誤：' + e.message;
+  }
+}
+$('search').addEventListener('input',render);$('sort').addEventListener('change',render);$('reset').addEventListener('click',()=>{$('search').value='';render()});
+ 
+function drawHistoryChart(stockCode) {
+  const chart = $('historyChart');
+
+  const points = historyDays
+    .map(day => {
+      const records = day.stocks || day.watchlist || {};
+      const stock = records[String(stockCode)];
+
+      return {
+        date: day.date,
+        close: stock ? Number(stock.close) : NaN
+      };
+    })
+    .filter(p => p.date && Number.isFinite(p.close))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (points.length < 2) {
+    chart.innerHTML =
+      '<p class="plain">目前只有 ' + points.length +
+      ' 個交易日資料，累積至少 2 個交易日後才會顯示折線圖。</p>';
+    return;
+  }
+
+  const width = 700;
+  const height = 280;
+  const pad = { top: 25, right: 25, bottom: 45, left: 65 };
+
+  const values = points.map(p => p.close);
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+
+  const x = i =>
+    pad.left + i * (width - pad.left - pad.right) /
+    (points.length - 1);
+
+  const y = value =>
+    pad.top + (max - value) * (height - pad.top - pad.bottom) /
+    (max - min);
+
+  const line = points.map((p, i) =>
+    `${x(i)},${y(p.close)}`
+  ).join(' ');
+
+  const labels = points.map((p, i) => {
+    if (
+      i === 0 ||
+      i === points.length - 1 ||
+      i === Math.floor(points.length / 2)
+    ) {
+      return `<text x="${x(i)}" y="${height - 12}"
+        text-anchor="middle" font-size="11" fill="currentColor">
+        ${p.date.slice(5)}
+      </text>`;
+    }
+    return '';
+  }).join('');
+
+  const dots = points.map((p, i) =>
+    `<circle cx="${x(i)}" cy="${y(p.close)}" r="4"
+      fill="#1c5d8f">
+      <title>${p.date}：${p.close}</title>
+    </circle>`
+  ).join('');
+
+  chart.innerHTML = `
+    <p class="plain">共 ${points.length} 個交易日｜單位：元</p>
+    <svg viewBox="0 0 ${width} ${height}"
+      role="img" aria-label="歷史收盤價折線圖"
+      style="width:100%;min-width:320px;max-width:800px;height:auto">
+      <line x1="${pad.left}" y1="${pad.top}"
+        x2="${pad.left}" y2="${height - pad.bottom}"
+        stroke="#9aaaba"/>
+      <line x1="${pad.left}" y1="${height - pad.bottom}"
+        x2="${width - pad.right}" y2="${height - pad.bottom}"
+        stroke="#9aaaba"/>
+      <polyline points="${line}" fill="none"
+        stroke="#1c5d8f" stroke-width="3"
+        stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="8" y="${pad.top + 5}"
+        font-size="12" fill="currentColor">${max.toFixed(2)}</text>
+      <text x="8" y="${height - pad.bottom}"
+        font-size="12" fill="currentColor">${min.toFixed(2)}</text>
+      ${labels}
+    </svg>
+    <p class="plain">圖表僅呈現已保存的收盤價，不代表未來走勢。</p>
+  `;
+}
+
   $('stockRows').addEventListener('click',e=>{
   const btn=e.target.closest('.stock-pick');
   if(!btn)return;
@@ -78,6 +223,7 @@ $('updatedMetric').textContent=updated
   $('detailClose').textContent=fmt(s.close);
   $('detailChange').textContent=s.change===null?'—':(s.change>0?'+':'')+fmt(s.change);
   $('detailVolume').textContent=fmt(s.volume,0);
+    drawHistoryChart(s.code);
 
   $('stockDetail').hidden=false;
   $('stockDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
