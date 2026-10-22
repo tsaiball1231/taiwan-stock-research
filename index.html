@@ -68,10 +68,37 @@ async function init() {
       cache: 'no-store'
     });
 
-    if (hr.ok) {
-      const hd = await hr.json();
-      historyDays = Array.isArray(hd.days) ? hd.days : [];
-    }
+   if (hr.ok) {
+  const hd = await hr.json();
+
+  // 相容舊格式：days
+  if (Array.isArray(hd.days)) {
+    historyDays = hd.days;
+  }
+  // 相容目前格式：stocks
+  else if (Array.isArray(hd.stocks)) {
+    const grouped = {};
+
+    hd.stocks.forEach(stock => {
+      if (!stock.date || !stock.code) return;
+
+      if (!grouped[stock.date]) {
+        grouped[stock.date] = {
+          date: stock.date,
+          stocks: {}
+        };
+      }
+
+      grouped[stock.date].stocks[String(stock.code)] = stock;
+    });
+
+    historyDays = Object.values(grouped).sort(
+      (a, b) => a.date.localeCompare(b.date)
+    );
+  } else {
+    historyDays = [];
+  }
+}
 
     // 再讀取最新行情
     const r = await fetch('./data/latest.json', {
