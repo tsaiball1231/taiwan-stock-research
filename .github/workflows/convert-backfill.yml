@@ -1,0 +1,28 @@
+
+name: Convert Stock Backfill
+
+on:
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Convert historical data
+        run: python scripts/convert_backfill.py
+
+      - name: Upload converted data
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-history-2891
+          path: data/stock_history/2891.json
+          if-no-files-found: error
+          retention-days: 7
