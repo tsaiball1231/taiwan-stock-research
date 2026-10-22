@@ -148,18 +148,48 @@ $('search').addEventListener('input',render);$('sort').addEventListener('change'
 function drawHistoryChart(stockCode) {
   const chart = $('historyChart');
 
-  const points = historyDays
-    .map(day => {
-      const records = day.stocks || day.watchlist || {};
-      const stock = records[String(stockCode)];
+ 
+const points = [];
 
-      return {
-        date: day.date,
-        close: stock ? Number(stock.close) : NaN
-      };
-    })
-    .filter(p => p.date && Number.isFinite(p.close))
-    .sort((a, b) => a.date.localeCompare(b.date));
+if (String(stockCode) === '2891') {
+  try {
+    const response = await fetch('./data/stock_history/2891.json', {
+      cache: 'no-store'
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+
+      for (const stock of (result.stocks || [])) {
+        points.push({
+          date: stock.date,
+          close: Number(stock.close)
+        });
+      }
+    }
+  } catch (error) {
+    console.error('讀取中信金歷史股價失敗：', error);
+  }
+}
+
+if (points.length === 0) {
+  points.push(
+    ...historyDays
+      .map(day => {
+        const records = day.stocks || day.watchlist || {};
+        const stock = records[String(stockCode)];
+
+        return {
+          date: day.date,
+          close: stock ? Number(stock.close) : NaN
+        };
+      })
+      .filter(p => p.date && Number.isFinite(p.close))
+  );
+}
+
+points.sort((a, b) => a.date.localeCompare(b.date));
+
 
   if (points.length < 2) {
     chart.innerHTML =
