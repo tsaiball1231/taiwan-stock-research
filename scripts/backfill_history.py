@@ -1,4 +1,3 @@
-```python
 import json
 import time
 from pathlib import Path
@@ -103,4 +102,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
