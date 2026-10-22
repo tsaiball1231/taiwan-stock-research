@@ -24,3 +24,10 @@ jobs:
 
       - name: Run historical data test
         run: python scripts/backfill_history.py
+              - name: Save test data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backfill-test-2891
+          path: data/backfill_test/2891_202609.json
+          if-no-files-found: error
+          retention-days: 7
