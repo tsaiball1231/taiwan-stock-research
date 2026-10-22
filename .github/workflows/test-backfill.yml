@@ -1,4 +1,3 @@
-```yaml
 name: Test Taiwan Stock Backfill
 
 on:
@@ -29,4 +28,3 @@ jobs:
           path: data/backfill_test/2891_202609.json
           if-no-files-found: error
           retention-days: 7
-```
