@@ -4,6 +4,9 @@ name: Convert Stock Backfill
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   convert:
     runs-on: ubuntu-latest
@@ -18,6 +21,14 @@ jobs:
 
       - name: Convert historical data
         run: python scripts/convert_backfill.py
+
+      - name: Save converted data to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/stock_history/2891.json
+          git diff --cached --quiet || git commit -m "Add 2891 historical stock data"
+          git push
 
       - name: Upload converted data
         uses: actions/upload-artifact@v4
