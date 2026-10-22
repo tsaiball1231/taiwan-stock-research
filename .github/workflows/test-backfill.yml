@@ -1,6 +1,6 @@
 name: Test Taiwan Stock Backfill
 
-'on':
+on:
   workflow_dispatch:
   
 jobs:
