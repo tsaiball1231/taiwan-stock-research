@@ -1,0 +1,55 @@
+
+name: Test Backfill Multiple Stocks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Download historical data
+        run: python scripts/backfill_all_stocks.py --codes 2891 2330
+
+      - name: Check generated files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for code in ("2891", "2330"):
+              path = Path(f"data/stock_history/{code}.json")
+              assert path.exists(), f"缺少檔案：{path}"
+
+              data = json.loads(path.read_text(encoding="utf-8"))
+              assert data.get("stocks"), f"{code} 沒有歷史資料"
+              assert all(
+                  row.get("code") == code
+                  for row in data["stocks"]
+              ), f"{code} 的股票代號不一致"
+
+              print(f"{code}: {len(data['stocks'])} 筆資料，檢查通過")
+          PY
+
+      - name: Upload test data
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-stock-backfill-test
+          path: data/stock_history/*.json
+          if-no-files-found: error
