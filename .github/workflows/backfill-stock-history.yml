@@ -36,10 +36,12 @@ jobs:
         run: pip install requests
 
       - name: Download historical data
-        run: >
-          python scripts/backfill_all_stocks.py
-          --start "${{ inputs.start }}"
-          --limit "${{ inputs.limit }}"
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u scripts/backfill_all_stocks.py \
+            --start "${{ inputs.start }}" \
+            --limit "${{ inputs.limit }}"
 
       - name: Commit downloaded data
         run: |
