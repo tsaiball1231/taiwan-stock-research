@@ -11,6 +11,27 @@ URL = "https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY"
 OUTPUT_DIR = Path("data/stock_history")
 MONTHS_TO_DOWNLOAD = 12
 
+STOCK_LIST_URL = "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+
+
+def get_stock_list():
+    response = requests.get(
+        STOCK_LIST_URL,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=30,
+    )
+    response.raise_for_status()
+    data = response.json()
+
+    codes = []
+    for item in data:
+        code = str(item.get("公司代號", "")).strip()
+        if code.isdigit() and len(code) == 4:
+            codes.append(code)
+
+    return sorted(set(codes))
+
+
 
 def to_roc_date(value):
     year, month, day = map(int, value.split("/"))
