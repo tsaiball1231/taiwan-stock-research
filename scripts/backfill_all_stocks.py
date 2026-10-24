@@ -17,11 +17,21 @@ def to_roc_date(value):
     return f"{year + 1911:04d}-{month:02d}-{day:02d}"
 
 
+
 def to_number(value):
     value = str(value).replace(",", "").strip()
+
     if not value or value in {"--", "---"}:
         return None
-    return float(value)
+
+    # 部分股票的漲跌價差可能包含特殊字元
+    if value.startswith("X"):
+        value = value[1:]
+
+    try:
+        return float(value)
+    except ValueError:
+        return None
 
 
 def fetch_month(session, code, year, month):
