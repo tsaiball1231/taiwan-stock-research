@@ -137,6 +137,7 @@ def main():
         help="重新下載已存在的股票資料",
     )
     args = parser.parse_args()
+    print("程式啟動，準備處理股票資料", flush=True)
 
     if args.start < 0:
         parser.error("--start 不可小於 0")
@@ -181,8 +182,16 @@ def main():
 
             records = {}
 
-            try:
-                for year, month in get_months():
+                      try:
+                months = get_months()
+
+                for index, (year, month) in enumerate(months, start=1):
+                    print(
+                        f"[{code}] 正在下載第 {index}/{len(months)} 個月份："
+                        f"{year}-{month:02d}",
+                        flush=True,
+                    )
+
                     result = fetch_month(session, code, year, month)
 
                     for row in result.get("data", []):
