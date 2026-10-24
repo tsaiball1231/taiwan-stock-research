@@ -145,7 +145,7 @@ async function init() {
 }
 $('search').addEventListener('input',render);$('sort').addEventListener('change',render);$('reset').addEventListener('click',()=>{$('search').value='';render()});
  
-function drawHistoryChart(stockCode) {
+async function drawHistoryChart(stockCode) {
   const chart = $('historyChart');
 
  
