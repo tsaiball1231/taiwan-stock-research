@@ -1,0 +1,42 @@
+
+name: Test Stock List
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Test stock list API
+        run: |
+          python - <<'PY'
+          from scripts.backfill_all_stocks import get_stock_list
+
+          codes = get_stock_list()
+
+          print(f"取得股票代號數量：{len(codes)}")
+          print(f"前 20 個代號：{codes[:20]}")
+
+          assert len(codes) > 500, "取得的股票數量異常，請檢查 API"
+          assert "2330" in codes, "清單中找不到台積電 2330"
+          assert "2891" in codes, "清單中找不到中信金 2891"
+
+          print("股票清單測試通過！")
+          PY
