@@ -91,22 +91,29 @@ def get_months():
     return list(reversed(months))
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--codes",
-        nargs="+",
-        required=True,
-        help="股票代號，例如 2891 2330 2317",
-    )
-    args = parser.parse_args()
+
+parser.add_argument(
+    "--codes",
+    nargs="+",
+    default=None,
+    help="指定股票代號，例如 2891 2330 2317；不指定則使用全部上市股票",
+)
+args = parser.parse_args()
+
+if args.codes:
+    codes = args.codes
+else:
+    print("正在取得上市股票清單……")
+    codes = get_stock_list()
+    print(f"共取得 {len(codes)} 檔上市股票")
+
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     with requests.Session() as session:
         session.headers.update({"User-Agent": "Mozilla/5.0"})
 
-        for code in args.codes:
+       for code in codes:
             records = {}
 
             for year, month in get_months():
