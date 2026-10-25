@@ -254,6 +254,7 @@ async function drawHistoryChart(stockCode) {
   `;
 }
 
+ $('stockRows').addEventListener('click',e=>{
   const btn=e.target.closest('.stock-pick');
   if(!btn)return;
   const s=allStocks.find(x=>String(x.code)===btn.dataset.code);
