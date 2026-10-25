@@ -180,6 +180,7 @@ def main():
                 skipped += 1
                 continue
 
+           
             records = {}
 
             try:
@@ -199,6 +200,22 @@ def main():
                             continue
 
                         day = to_roc_date(row[0])
+
+                        records[day] = {
+                            "date": day,
+                            "code": code,
+                            "volume": int(row[1].replace(",", "")),
+                            "value": int(row[2].replace(",", "")),
+                            "open": to_number(row[3]),
+                            "high": to_number(row[4]),
+                            "low": to_number(row[5]),
+                            "close": to_number(row[6]),
+                            "change": to_number(row[7]),
+                            "transactions": int(
+                                row[8].replace(",", "")
+                            ),
+                        }
+
 
                         records[day] = {
                             "date": day,
