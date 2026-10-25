@@ -159,15 +159,26 @@ async function drawHistoryChart(stockCode) {
       { cache: 'no-store' }
     );
 
-    if (response.ok) {
-      const result = await response.json();
-      points = (result.stocks || [])
-        .map(stock => ({
-          date: stock.date,
-          close: Number(stock.close)
-        }))
-        .filter(p => p.date && Number.isFinite(p.close) && p.close > 0);
-    }
+   if (!response.ok) {
+  console.warn(
+    `股票 ${code} 歷史檔案讀取失敗：HTTP ${response.status}`
+  );
+} else {
+  const result = await response.json();
+
+  points = (Array.isArray(result.stocks) ? result.stocks : [])
+    .map(stock => ({
+      date: stock.date,
+      close: Number(stock.close)
+    }))
+    .filter(p =>
+      p.date &&
+      Number.isFinite(p.close) &&
+      p.close > 0
+    );
+
+  console.log(`股票 ${code} 歷史資料：${points.length} 筆`);
+}
   } catch (error) {
     console.error('讀取歷史股價失敗：', error);
   }
