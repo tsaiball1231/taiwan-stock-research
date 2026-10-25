@@ -1,9 +1,13 @@
-
 name: Backfill Stock History
 
 on:
   workflow_dispatch:
     inputs:
+      codes:
+        description: "指定股票代號，例如 2330 2317 2891；留空則使用 start/limit"
+        required: false
+        default: ""
+        type: string
       start:
         description: "股票清單起始位置（從 0 開始）"
         required: true
@@ -39,9 +43,14 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          python -u scripts/backfill_all_stocks.py \
-            --start "${{ inputs.start }}" \
-            --limit "${{ inputs.limit }}"
+          if [ -n "${{ inputs.codes }}" ]; then
+            python -u scripts/backfill_all_stocks.py \
+              --codes ${{ inputs.codes }}
+          else
+            python -u scripts/backfill_all_stocks.py \
+              --start "${{ inputs.start }}" \
+              --limit "${{ inputs.limit }}"
+          fi
 
       - name: Commit downloaded data
         run: |
