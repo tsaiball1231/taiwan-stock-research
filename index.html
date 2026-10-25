@@ -145,63 +145,63 @@ async function init() {
 }
 $('search').addEventListener('input',render);$('sort').addEventListener('change',render);$('reset').addEventListener('click',()=>{$('search').value='';render()});
  
+
 async function drawHistoryChart(stockCode) {
   const chart = $('historyChart');
+  chart.innerHTML = '<p class="plain">正在讀取歷史股價…</p>';
 
- 
-const points = [];
+  let points = [];
 
-if (String(stockCode) === '2891') {
   try {
-    const response = await fetch('./data/stock_history/2891.json', {
-      cache: 'no-store'
-    });
+    const code = String(stockCode).trim();
+    const response = await fetch(
+      `./data/stock_history/${encodeURIComponent(code)}.json`,
+      { cache: 'no-store' }
+    );
 
     if (response.ok) {
       const result = await response.json();
-
-      for (const stock of (result.stocks || [])) {
-        points.push({
+      points = (result.stocks || [])
+        .map(stock => ({
           date: stock.date,
           close: Number(stock.close)
-        });
-      }
+        }))
+        .filter(p => p.date && Number.isFinite(p.close) && p.close > 0);
     }
   } catch (error) {
-    console.error('讀取中信金歷史股價失敗：', error);
+    console.error('讀取歷史股價失敗：', error);
   }
-}
 
-if (points.length === 0) {
-  points.push(
-    ...historyDays
+  // 若該股票沒有獨立歷史檔，才使用舊資料備援
+  if (points.length === 0) {
+    points = historyDays
       .map(day => {
         const records = day.stocks || day.watchlist || {};
         const stock = records[String(stockCode)];
-
         return {
           date: day.date,
           close: stock ? Number(stock.close) : NaN
         };
       })
-      .filter(p => p.date && Number.isFinite(p.close))
+      .filter(p => p.date && Number.isFinite(p.close) && p.close > 0);
+  }
+
+  // 日期排序並去除重複日期
+  const unique = new Map();
+  points.forEach(p => unique.set(p.date, p));
+  points = [...unique.values()].sort((a, b) =>
+    a.date.localeCompare(b.date)
   );
-}
-
-points.sort((a, b) => a.date.localeCompare(b.date));
-
 
   if (points.length < 2) {
     chart.innerHTML =
-      '<p class="plain">目前只有 ' + points.length +
-      ' 個交易日資料，累積至少 2 個交易日後才會顯示折線圖。</p>';
+      `<p class="plain">目前只有 ${points.length} 個交易日資料，請確認 data/stock_history/${stockCode}.json 是否存在且包含歷史資料。</p>`;
     return;
   }
 
   const width = 700;
   const height = 280;
   const pad = { top: 25, right: 25, bottom: 45, left: 65 };
-
   const values = points.map(p => p.close);
   let min = Math.min(...values);
   let max = Math.max(...values);
@@ -211,37 +211,24 @@ points.sort((a, b) => a.date.localeCompare(b.date));
     max += 1;
   }
 
-  const x = i =>
-    pad.left + i * (width - pad.left - pad.right) /
-    (points.length - 1);
-
-  const y = value =>
-    pad.top + (max - value) * (height - pad.top - pad.bottom) /
-    (max - min);
+  const x = i => pad.left + i *
+    (width - pad.left - pad.right) / (points.length - 1);
+  const y = value => pad.top + (max - value) *
+    (height - pad.top - pad.bottom) / (max - min);
 
   const line = points.map((p, i) =>
     `${x(i)},${y(p.close)}`
   ).join(' ');
 
-  const labels = points.map((p, i) => {
-    if (
-      i === 0 ||
-      i === points.length - 1 ||
-      i === Math.floor(points.length / 2)
-    ) {
-      return `<text x="${x(i)}" y="${height - 12}"
-        text-anchor="middle" font-size="11" fill="currentColor">
-        ${p.date.slice(5)}
-      </text>`;
-    }
-    return '';
-  }).join('');
+  const labels = points.map((p, i) =>
+    i === 0 || i === points.length - 1 ||
+    i === Math.floor(points.length / 2)
+      ? `<text x="${x(i)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="currentColor">${p.date.slice(5)}</text>`
+      : ''
+  ).join('');
 
   const dots = points.map((p, i) =>
-    `<circle cx="${x(i)}" cy="${y(p.close)}" r="4"
-      fill="#1c5d8f">
-      <title>${p.date}：${p.close}</title>
-    </circle>`
+    `<circle cx="${x(i)}" cy="${y(p.close)}" r="3" fill="#1c5d8f"><title>${p.date}：${p.close}</title></circle>`
   ).join('');
 
   chart.innerHTML = `
@@ -259,17 +246,14 @@ points.sort((a, b) => a.date.localeCompare(b.date));
         stroke="#1c5d8f" stroke-width="3"
         stroke-linejoin="round" stroke-linecap="round"/>
       ${dots}
-      <text x="8" y="${pad.top + 5}"
-        font-size="12" fill="currentColor">${max.toFixed(2)}</text>
-      <text x="8" y="${height - pad.bottom}"
-        font-size="12" fill="currentColor">${min.toFixed(2)}</text>
+      <text x="8" y="${pad.top + 5}" font-size="12" fill="currentColor">${max.toFixed(2)}</text>
+      <text x="8" y="${height - pad.bottom}" font-size="12" fill="currentColor">${min.toFixed(2)}</text>
       ${labels}
     </svg>
     <p class="plain">圖表僅呈現已保存的收盤價，不代表未來走勢。</p>
   `;
 }
 
-  $('stockRows').addEventListener('click',e=>{
   const btn=e.target.closest('.stock-pick');
   if(!btn)return;
   const s=allStocks.find(x=>String(x.code)===btn.dataset.code);
