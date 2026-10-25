@@ -182,7 +182,7 @@ def main():
 
             records = {}
 
-                      try:
+            try:
                 months = get_months()
 
                 for index, (year, month) in enumerate(months, start=1):
